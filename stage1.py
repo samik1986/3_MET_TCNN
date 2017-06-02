@@ -56,8 +56,7 @@ plot_model(model, to_file='model.png')
 
 sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
 
-model.compile(loss='categorical_crossentropy',
-              optimizer=sgd)
+model.compile(loss='categorical_crossentropy', optimizer=sgd)
 
 datagen = ImageDataGenerator(
     featurewise_center=True,

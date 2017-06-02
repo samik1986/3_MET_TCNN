@@ -19,6 +19,7 @@ for directories in os.listdir(dsDir):
     tsdir = os.path.join(dir, 'Outdoor/')
     for shots in os.listdir(trdir):
         shotDir = os.path.join(trdir,shots)
+        print shotDir
         for files in os.listdir(shotDir):
             filepath = os.path.join(shotDir,files)
             img = misc.imread(filepath)
@@ -31,6 +32,7 @@ for directories in os.listdir(dsDir):
             trLabel = np.asarray(rLabel)
     for shots in os.listdir(tsdir):
         shotDir = os.path.join(tsdir,shots)
+        print shotDir
         for files in os.listdir(shotDir):
             filepath = os.path.join(shotDir,files)
             img = misc.imread(filepath)
@@ -42,11 +44,9 @@ for directories in os.listdir(dsDir):
             tsImages = np.asarray(t)
             tsLabel = np.asarray(tLabel)
     count = count+1
-    print count
 
-
-np.save('trainImagesIITM',trImages)
-np.save('trainLabelIITM',trLabel)
-np.save('testImagesIITM',tsImages)
-np.save('testLabelIITM',tsLabel)
+    np.save('trainImagesIITM',trImages)
+    np.save('trainLabelIITM',trLabel)
+    np.save('testImagesIITM',tsImages)
+    np.save('testLabelIITM',tsLabel)
 

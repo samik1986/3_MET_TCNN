@@ -28,14 +28,9 @@ input_dim =  [100,100,3]
 
 sess = tf.InteractiveSession()
 
-def hellinger_distance(y_true,y_pred):
-    y_true = K.clip()
-
 def create_network(input_dim):
 
     input_source = Input(input_dim)
-
-    #---Autoencoder----
 
     x = Conv2D(10, (3, 3), activation='relu', padding='same')(input_source)
     x1 = MaxPooling2D((3, 3), padding='same')(x)

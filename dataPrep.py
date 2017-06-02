@@ -24,7 +24,9 @@ for directories in os.listdir(dsDir):
             img = misc.imread(filepath)
             img = misc.imresize(img, [100,100,3],'bicubic')
             r.append(img)
-            rLabel.append(count)
+            temp = np.zeros([51], dtype='int32')
+            temp[count - 1] = 1
+            rLabel.append(temp)
             trImages = np.asarray(r)
             trLabel = np.asarray(rLabel)
     for shots in os.listdir(tsdir):
@@ -34,10 +36,14 @@ for directories in os.listdir(dsDir):
             img = misc.imread(filepath)
             img = misc.imresize(img, [100,100,3],'bicubic')
             t.append(img)
-            tLabel.append(count)
+            temp = np.zeros([51], dtype='int32')
+            temp[count - 1] = 1
+            tLabel.append(temp)
             tsImages = np.asarray(t)
             tsLabel = np.asarray(tLabel)
     count = count+1
+
+
 np.save('trainImagesIITM',trImages)
 np.save('trainLabelIITM',trLabel)
 np.save('testImagesIITM',tsImages)

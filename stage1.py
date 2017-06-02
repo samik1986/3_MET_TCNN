@@ -25,7 +25,6 @@ x_train = np.load('trainImagesIITM.npy')
 y_train = np.load('trainLabelIITM.npy')
 
 input_dim =  [100,100,3]
-
 sess = tf.InteractiveSession()
 
 def create_network(input_dim):
@@ -50,7 +49,6 @@ def create_network(input_dim):
                   outputs=[classifier1])
 
     return final
-
 
 model = create_network([100, 100, 3])
 print(model.summary())

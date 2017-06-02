@@ -42,6 +42,7 @@ for directories in os.listdir(dsDir):
             tsImages = np.asarray(t)
             tsLabel = np.asarray(tLabel)
     count = count+1
+    print count
 
 
 np.save('trainImagesIITM',trImages)

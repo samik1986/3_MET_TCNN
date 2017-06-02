@@ -44,7 +44,7 @@ def create_network(input_dim):
     y1 = Dense(512, activation='relu')(y)
     y2 = Dropout(0.25)(y1)
     lm = Dense(100, activation='relu')(y2)
-    classifier1 = Dense(10, activation='logsoftmax')(lm)
+    classifier1 = Dense(51, activation='logsoftmax')(lm)
 
     final = Model(inputs=[input_source],
                   outputs=[classifier1])
@@ -72,7 +72,7 @@ datagen = ImageDataGenerator(
 datagen.fit(x_train)
 filepath="models/ckpt{epoch:02d}.hdf5"
 checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-model.fit_generator(datagen.flow(x_train, y_train, batch_size=100),
+model.fit_generator(datagen.flow(x_train, y_train, batch_size=200),
                     steps_per_epoch=len(x_train) / 200, epochs=100000,
                     callbacks=[TensorBoard(log_dir='tb/stg1',
                                  write_images=True, write_grads=True),checkpoint])

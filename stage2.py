@@ -21,23 +21,14 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework.op_def_library import _Flatten, _IsListValue
 from keras.callbacks import TensorBoard, ModelCheckpoint
 
-
-
-
-
 model_stg1 = load_model('models/stg1_ckpt760.hdf5')
 
 model_bcm = Model(inputs=model_stg1.input,
                   outputs=model_stg1.get_layer('max_pooling2d_2').output)
 
-
-
-input_dim =  [10, 100,100,3]
+input_dim =  [100,100,20]
 
 sess = tf.InteractiveSession()
-
-def hellinger_distance(y_true,y_pred):
-    y_true = K.clip()
 
 def create_network(input_dim):
     input_target = Input(input_dim)
@@ -70,8 +61,8 @@ def create_network(input_dim):
     x14 = Conv2D(15, (3, 3), activation='relu', padding='same')(x13)
     x15 = UpSampling2D((2, 2))(x14)
     x16 = Conv2D(15, (3, 3), activation='relu', padding='same')(x15)
-    x17 = Conv2D(20, (3, 3), activation='relu', padding='same')(x16)
-    decoded = Conv2D(10, (3, 3), activation='sigmoid')(x17)
+    decoded = Conv2D(20, (3, 3), activation='relu', padding='same')(x16)
+    # decoded = Conv2D(10, (3, 3), activation='sigmoid', padding='same')(x17)
     # print K.int_shape(decoded)
     # print input_source
 
@@ -87,13 +78,13 @@ model.save("model.h5",overwrite=True)
 print(model.summary())
 
 x_train = np.load('ae_gxTrain.npy')
-print 'R'
+print 'Read Gallery'
 x_train = model_bcm.predict(x_train)
-print 'P'
+print 'Gallery Features'
 x_aux_train = np.load('ae_pxTrain.npy')
-print 'R'
+print 'Read Probe'
 x_aux_train = model_bcm.predict(x_aux_train)
-print 'P'
+print 'Probe Features'
 
 
 
@@ -126,34 +117,5 @@ model.fit_generator(datagen.flow(x_aux_train, x_train, batch_size=200),
 #                                  write_images=True, write_grads=True)
 #                      ])
 
-# grads = model.optimizer.get_gradients(model.total_loss,model.get_weights())
-# print sess.run(grads)
-# decoded_imgs = model.predict(x_test)
-# np.save('dec_images',decoded_imgs)
-# n = 5
-# plt.figure(figsize=(20, 4))
-# for i in range(n):
-#     # display original
-#     ax = plt.subplot(2, n, i)
-#     plt.imshow(x_test[i].reshape(100, 100))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-#
-#     # display reconstruction
-#     ax = plt.subplot(2, n, i + n)
-#     plt.imshow(decoded_imgs[i].reshape(100, 100))
-#     plt.gray()
-#     ax.get_xaxis().set_visible(False)
-#     ax.get_yaxis().set_visible(False)
-# plt.show()
-
 model.save("model.h5",overwrite=True)
-# model.save_weights("model_weights.h5", overwrite=True)
-# score = model.evaluate(x_test,
-#                        y_test,
-#                         batch_size=20)
-
-
-# print score
 

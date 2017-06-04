@@ -20,15 +20,24 @@ from scipy.linalg._expm_frechet import vec
 from tensorflow.python.framework import ops
 from tensorflow.python.framework.op_def_library import _Flatten, _IsListValue
 from keras.callbacks import TensorBoard, ModelCheckpoint
-
+#
 model_stg1 = load_model('models/stg1_ckpt760.hdf5')
+
+# print model_stg1.summary()
 
 model_bcm = Model(inputs=model_stg1.input,
                   outputs=model_stg1.get_layer('max_pooling2d_2').output)
+model_lm = Model(inputs=model_stg1.getlayer('flatten_1').input,
+                  outputs=model_stg1.get_layer('dense_3').output)
+model_cl = Model(inputs=model_stg1.getlayer('dense_4').input,
+                  outputs=model_stg1.get_layer('dense_4').output)
 
-model_bcm.save('models/bcm')
 
-print model_bcm.summary()
+model_bcm.save('models/bcm.hdf5')
+model_lm.save('models/lm.hdf5')
+model_cl.save('models/cl.hdf5')
+
+# print model_bcm.summary()
 
 x_train = np.load('ae_gxTrain.npy')
 print 'Read Gallery'
@@ -40,7 +49,7 @@ x_aux_train = model_bcm.predict(x_aux_train)
 print 'Probe Features'
 
 
-input_dim =  [100,100,20]
+input_dim =  [12,12,20]
 
 sess = tf.InteractiveSession()
 
@@ -61,8 +70,7 @@ def create_network(input_dim):
     # print shape2[0]
     x7 = Dense(2048,activation='relu')(x6)
     x71 = Dense(512,activation='relu')(x7)
-
-    encoded = Dropout(0.5)(x71)
+    encoded = Dropout(0.25)(x71)
 
 
     # print encoded
@@ -76,7 +84,6 @@ def create_network(input_dim):
     x15 = UpSampling2D((2, 2))(x14)
     x16 = Conv2D(15, (3, 3), activation='relu', padding='same')(x15)
     decoded = Conv2D(20, (3, 3), activation='relu', padding='same')(x16)
-    # decoded = Conv2D(10, (3, 3), activation='sigmoid', padding='same')(x17)
     # print K.int_shape(decoded)
     # print input_source
 
@@ -87,35 +94,24 @@ def create_network(input_dim):
     return final
 
 
-model = create_network([100, 100, 3])
+model = create_network(input_dim)
 # model.save("model.h5",overwrite=True)
 print(model.summary())
 
-
-# datagen = ImageDataGenerator(
-#     featurewise_center=True,
-#     featurewise_std_normalization=True,
-#     rotation_range=20,
-#     width_shift_range=0.2,
-#     height_shift_range=0.2,
-#     horizontal_flip=True)
 
 adam = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-05)
 model.compile(loss='kullback_leibler_divergence',
               optimizer=adam)
 
-# datagen.fit(x_aux_train)
-# print 'D'
+
 filepath="models/stg2_ckpt{epoch:02d}.hdf5"
 checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-# model.fit_generator(datagen.flow(x_aux_train, x_train, batch_size=200),
-#                     steps_per_epoch=len(x_aux_train) / 200, epochs=10000,
-#                     callbacks=[TensorBoard(log_dir='models/',
-#                                  write_images=True, write_grads=True),checkpoint])
+
 
 model.fit(x_aux_train,
           x_train,
           batch_size=200, epochs=100000,
+          steps_per_epoch=len(x_aux_train) / 200,
           callbacks=[TensorBoard(log_dir='models/',
                                  write_images=True, write_grads=True),
                      checkpoint])

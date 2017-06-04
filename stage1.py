@@ -24,6 +24,8 @@ from keras.callbacks import TensorBoard, ModelCheckpoint
 x_train = np.load('trainImagesIITM.npy')
 y_train = np.load('trainLabelIITM.npy')
 
+print len(x_train)
+
 input_dim =  [100,100,3]
 sess = tf.InteractiveSession()
 
@@ -43,7 +45,7 @@ def create_network(input_dim):
     y1 = Dense(512, activation='relu')(y)
     y2 = Dropout(0.25)(y1)
     lm = Dense(100, activation='relu')(y2)
-    classifier1 = Dense(51, activation='logsoftmax')(lm)
+    classifier1 = Dense(51, activation='softmax')(lm)
 
     final = Model(inputs=[input_source],
                   outputs=[classifier1])
@@ -52,7 +54,7 @@ def create_network(input_dim):
 
 model = create_network([100, 100, 3])
 print(model.summary())
-plot_model(model, to_file='model.png')
+# plot_model(model, to_file='model.png')
 
 sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
 
@@ -67,10 +69,10 @@ datagen = ImageDataGenerator(
     horizontal_flip=True)
 
 datagen.fit(x_train)
-filepath="models/ckpt{epoch:02d}.hdf5"
+filepath="models/stg1_ckpt{epoch:02d}.hdf5"
 checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-model.fit_generator(datagen.flow(x_train, y_train, batch_size=200),
-                    steps_per_epoch=len(x_train) / 200, epochs=100000,
+model.fit_generator(datagen.flow(x_train, y_train, batch_size=300),
+                    steps_per_epoch=len(x_train) / 300, epochs=100000,
                     callbacks=[TensorBoard(log_dir='tb/stg1',
                                  write_images=True, write_grads=True),checkpoint])
 

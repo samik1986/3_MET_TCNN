@@ -26,6 +26,20 @@ model_stg1 = load_model('models/stg1_ckpt760.hdf5')
 model_bcm = Model(inputs=model_stg1.input,
                   outputs=model_stg1.get_layer('max_pooling2d_2').output)
 
+model_bcm.save('models/bcm')
+
+print model_bcm.summary()
+
+x_train = np.load('ae_gxTrain.npy')
+print 'Read Gallery'
+x_train = model_bcm.predict(x_train)
+print 'Gallery Features'
+x_aux_train = np.load('ae_pxTrain.npy')
+print 'Read Probe'
+x_aux_train = model_bcm.predict(x_aux_train)
+print 'Probe Features'
+
+
 input_dim =  [100,100,20]
 
 sess = tf.InteractiveSession()
@@ -74,48 +88,37 @@ def create_network(input_dim):
 
 
 model = create_network([100, 100, 3])
-model.save("model.h5",overwrite=True)
+# model.save("model.h5",overwrite=True)
 print(model.summary())
 
-x_train = np.load('ae_gxTrain.npy')
-print 'Read Gallery'
-x_train = model_bcm.predict(x_train)
-print 'Gallery Features'
-x_aux_train = np.load('ae_pxTrain.npy')
-print 'Read Probe'
-x_aux_train = model_bcm.predict(x_aux_train)
-print 'Probe Features'
 
-
-
-datagen = ImageDataGenerator(
-    featurewise_center=True,
-    featurewise_std_normalization=True,
-    rotation_range=20,
-    width_shift_range=0.2,
-    height_shift_range=0.2,
-    horizontal_flip=True)
+# datagen = ImageDataGenerator(
+#     featurewise_center=True,
+#     featurewise_std_normalization=True,
+#     rotation_range=20,
+#     width_shift_range=0.2,
+#     height_shift_range=0.2,
+#     horizontal_flip=True)
 
 adam = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-05)
 model.compile(loss='kullback_leibler_divergence',
               optimizer=adam)
 
-datagen.fit(x_aux_train)
-print 'D'
+# datagen.fit(x_aux_train)
+# print 'D'
 filepath="models/stg2_ckpt{epoch:02d}.hdf5"
 checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
-model.fit_generator(datagen.flow(x_aux_train, x_train, batch_size=200),
-                    steps_per_epoch=len(x_aux_train) / 200, epochs=10000,
-                    callbacks=[TensorBoard(log_dir='models/',
-                                 write_images=True, write_grads=True),checkpoint])
+# model.fit_generator(datagen.flow(x_aux_train, x_train, batch_size=200),
+#                     steps_per_epoch=len(x_aux_train) / 200, epochs=10000,
+#                     callbacks=[TensorBoard(log_dir='models/',
+#                                  write_images=True, write_grads=True),checkpoint])
 
-# model.fit(x_aux_train,
-#           x_train,
-#           batch_size=200, epochs=1000000,
-#           callbacks=[TensorBoard(log_dir='/tmp/autoencoder',
-#                                  histogram_freq=1,
-#                                  write_images=True, write_grads=True)
-#                      ])
+model.fit(x_aux_train,
+          x_train,
+          batch_size=200, epochs=100000,
+          callbacks=[TensorBoard(log_dir='models/',
+                                 write_images=True, write_grads=True),
+                     checkpoint])
 
 model.save("model.h5",overwrite=True)
 

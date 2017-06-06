@@ -26,98 +26,68 @@ model_bcm = load_model('models/bcm.hdf5')
 # model_tm.trainable = False
 # print model_bcm.summary()
 model_stg1 = load_model('models/stg1_ckpt760.hdf5')
-# print model_stg1.summary()
+print model_stg1.summary()
+
+x_train = np.load('targetImagesIITM.npy')
+x_train = model_bcm.predict(x_train)
+x_train = model_tm.predict(x_train)
+y_train = np.load('targetLabelIITM.npy')
+
+print len(x_train)
+
+sz_1 = len(model_bcm.layers)
+print sz_1
+
+del model_tm, model_bcm
+# input_dim =  [12,12,20]
+# sess = tf.InteractiveSession()
+
 
 def create_network(input_dim):
 
     input_source = Input(input_dim)
 
-    stg1_l = model_bcm(input_source)
-    # stg1_l.trainable = False
-    stg2_l = model_tm(stg1_l)
-    # stg2_l.trainable = False
 
-    # n_layers = model_stg1.__sizeof__()
-    # print n_layers
-    #
-    # x = Conv2D(10, (3, 3), activation='relu', padding='same')(input_source)
-    # x.trainable= False
-    # x = MaxPooling2D((3, 3), padding='same')(x)
-    # x.trainable = False
-    # x = Conv2D(15, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # x = BatchNormalization()(x)
-    # x.trainable = False
-    # x = Conv2D(20, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # bcm = MaxPooling2D((3, 3), padding='same')(x)
-    # bcm.trainable=False
-    #
-    # x = Conv2D(15, (3, 3), activation='relu', padding='same')(bcm)
-    # x.trainable = False
-    # x = Conv2D(15, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # x = MaxPooling2D((2, 2), padding='same')(x)
-    # x.trainable = False
-    # x = Conv2D(10, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # x = BatchNormalization()(x)
-    # x.trainable = False
-    # x = MaxPooling2D((2, 2), padding='same')(x)
-    # x.trainable = False
-    # shape1 = K.int_shape(x)
-    # # print shape1[0]
-    # x = Flatten()(x)
-    # shape2 = K.int_shape(x)
-    # # print shape2[0]
-    # x = Dense(2048, activation='relu')(x)
-    # x.trainable = False
-    # x = Dense(512, activation='relu')(x)
-    # x.trainable = False
-    # encoded = Dropout(0.25)(x)
-    # encoded.trainable = False
-    #
-    # # print encoded
-    # x = Dense(512, activation='relu')(encoded)
-    # x.trainable = False
-    # x = Dense(2048, activation='relu')(x)
-    # x.trainable = False
-    # x = Dense(shape2[1], activation='relu')(x)
-    # x.trainable = False
-    # x = Reshape([shape1[1], shape1[2], shape1[3]])(x)
-    # x.trainable = False
-    # x = UpSampling2D((2, 2))(x)
-    # x.trainable = False
-    # x = BatchNormalization()(x)
-    # x.trainable = False
-    # x = Conv2D(15, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # x = UpSampling2D((2, 2))(x)
-    # x.trainable = False
-    # x = Conv2D(15, (3, 3), activation='relu', padding='same')(x)
-    # x.trainable = False
-    # decoded = Conv2D(20, (3, 3), activation='relu', padding='same')(x)
-    # decoded.trainable = False
-    #
-    #
-    flat1 = model_stg1.get_layer('flatten_1')(stg2_l)
-    y = model_stg1.get_layer('dense_1')(flat1)
-    y = model_stg1.get_layer('dense_2')(y)
-    y = model_stg1.get_layer('dropout_1')(y)
-    lm = model_stg1.get_layer('dense_3')(y)
-    classifier1 = model_stg1.get_layer('dense_4')(lm)
-    #
+    sz_3 = len(model_stg1.layers)
+    print sz_3
+
+    x = model_stg1.layers[sz_3-sz_1+1](input_source)
+
+    for i in range(sz_3-sz_1-2):
+        x = model_stg1.layers[i+sz_1+1](x)
+
+    classifier1 = model_stg1.layers[sz_3-1](x)
+
+
 
 
     final = Model(inputs=[input_source],
                   outputs=[classifier1])
-    # print len(final.layers)
 
-    for layer in final.layers[:3]:
-        layer.trainable = False
+    sz_4= len(final.layers)
+    for i in range(sz_4-1):
+        w = model_stg1.layers[sz_3-sz_1+i+1].get_weights()
+        final.layers[i+1].set_weights(w)
+
+    sgd = SGD(lr=0.001, decay=1e-6, momentum=0.7, nesterov=True)
+
+    final.compile(loss='categorical_crossentropy', optimizer=sgd)
 
     return final
 
-model_stg3=create_network([100,100,3])
+
+model_stg3=create_network([12,12,20])
 print model_stg3.summary()
-print model_stg3.get_config()
+
+
+
+filepath="models/stg3_ckpt{epoch:02d}.hdf5"
+checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
+
+
+model_stg3.fit(x_train, y_train,
+          batch_size=200, epochs=100000,
+          callbacks=[TensorBoard(log_dir='models/',
+                                 write_images=True, write_grads=True),
+                     checkpoint])
+

@@ -118,7 +118,7 @@ checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only
 
 model.fit(x_aux_train,
           x_train,
-          batch_size=10000, epochs=100000,
+          batch_size=10000, epochs=1000,
           callbacks=[TensorBoard(log_dir='models/',
                                  write_images=True, write_grads=True),
                      checkpoint])

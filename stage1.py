@@ -50,6 +50,8 @@ def create_network(input_dim):
     final = Model(inputs=[input_source],
                   outputs=[classifier1])
 
+
+
     return final
 
 model = create_network([100, 100, 3])
@@ -72,8 +74,8 @@ datagen.fit(x_train)
 filepath="models/stg1_ckpt{epoch:02d}.hdf5"
 checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
 model.fit_generator(datagen.flow(x_train, y_train, batch_size=300),
-                    steps_per_epoch=len(x_train) / 300, epochs=100000,
-                    callbacks=[TensorBoard(log_dir='tb/stg1',
+                    steps_per_epoch=len(x_train) / 300, epochs=1000,
+                    callbacks=[TensorBoard(log_dir='models/',
                                  write_images=True, write_grads=True),checkpoint])
 
 model.save("model_stage1.hdf5",overwrite=True)

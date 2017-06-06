@@ -111,7 +111,8 @@ def create_network(input_dim):
 
     final = Model(inputs=[input_source],
                   outputs=[classifier1])
-    print len(final.layers)
+    # print len(final.layers)
+
     for layer in final.layers[:3]:
         layer.trainable = False
 

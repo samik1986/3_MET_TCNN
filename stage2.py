@@ -27,17 +27,24 @@ model_stg1 = load_model('models/stg1_ckpt760.hdf5')
 
 model_bcm = Model(inputs=model_stg1.input,
                   outputs=model_stg1.get_layer('max_pooling2d_2').output)
-model_lm = Model(inputs=model_stg1.getlayer('flatten_1').input,
-                  outputs=model_stg1.get_layer('dense_3').output)
-model_cl = Model(inputs=model_stg1.getlayer('dense_4').input,
-                  outputs=model_stg1.get_layer('dense_4').output)
+# model_lm = Model(inputs=model_stg1.get_layer('max_pooling2d_2').output,
+#                   outputs=model_stg1.get_layer('dense_3').output)
+# model_cl = Model(inputs=model_stg1.get_layer('dense_3').output,
+#                   outputs=model_stg1.get_layer('dense_4').output)
 
 
 model_bcm.save('models/bcm.hdf5')
-model_lm.save('models/lm.hdf5')
-model_cl.save('models/cl.hdf5')
+# model_lm.save('models/lm.hdf5')
+# model_cl.save('models/cl.hdf5')
 
-# print model_bcm.summary()
+print model_bcm.summary()
+# print model_lm.summary()
+# print model_cl.summary()
+
+# del model_cl
+# del model_lm
+del model_stg1
+
 
 x_train = np.load('ae_gxTrain.npy')
 print 'Read Gallery'
@@ -48,6 +55,7 @@ print 'Read Probe'
 x_aux_train = model_bcm.predict(x_aux_train)
 print 'Probe Features'
 
+del model_bcm
 
 input_dim =  [12,12,20]
 
@@ -99,7 +107,7 @@ model = create_network(input_dim)
 print(model.summary())
 
 
-adam = keras.optimizers.Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=1e-05)
+adam = keras.optimizers.Adam(lr=0.00001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0)
 model.compile(loss='kullback_leibler_divergence',
               optimizer=adam)
 
@@ -110,8 +118,7 @@ checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only
 
 model.fit(x_aux_train,
           x_train,
-          batch_size=200, epochs=100000,
-          steps_per_epoch=len(x_aux_train) / 200,
+          batch_size=10000, epochs=100000,
           callbacks=[TensorBoard(log_dir='models/',
                                  write_images=True, write_grads=True),
                      checkpoint])
